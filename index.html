@@ -1,0 +1,438 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROS ESP Visual Demo</title>
+
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #090909;
+  color: white;
+  font-family: Arial, sans-serif;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1100px;
+  margin: auto;
+}
+
+header {
+  background: #160909;
+  border: 1px solid #7e1515;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 18px;
+}
+
+h1 {
+  color: #ff3333;
+  font-size: 25px;
+}
+
+.subtitle {
+  color: #999;
+  font-size: 12px;
+  margin-top: 7px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 18px;
+}
+
+.panel {
+  background: #141414;
+  border: 1px solid #353535;
+  border-radius: 10px;
+  padding: 18px;
+}
+
+.panel h2 {
+  color: #ff4545;
+  font-size: 15px;
+  margin-bottom: 17px;
+}
+
+.setting {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 18px 0;
+  color: #ddd;
+  font-size: 13px;
+}
+
+input[type="checkbox"] {
+  accent-color: #e32929;
+  width: 17px;
+  height: 17px;
+}
+
+input[type="color"] {
+  width: 40px;
+  height: 28px;
+  background: transparent;
+  border: none;
+}
+
+button {
+  background: #9d1717;
+  border: 1px solid #ff4242;
+  color: white;
+  padding: 11px;
+  border-radius: 6px;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+button:hover {
+  background: #d12323;
+}
+
+button.secondary {
+  background: #252525;
+  border-color: #555;
+}
+
+.status {
+  color: #50df86;
+  font-size: 12px;
+  margin-top: 15px;
+}
+
+.arena {
+  min-height: 480px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #702020;
+  border-radius: 10px;
+  background:
+    linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px),
+    radial-gradient(ellipse at center, #292020, #080808);
+  background-size: 30px 30px, 30px 30px, auto;
+}
+
+.arena-title {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  color: #aaa;
+  font-size: 11px;
+  letter-spacing: 2px;
+}
+
+.target {
+  position: absolute;
+  width: 95px;
+  height: 180px;
+  transform: translateX(-50%);
+}
+
+.target-box {
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--target-color, #ff3333);
+  box-shadow: 0 0 12px var(--target-color, #ff3333);
+}
+
+.target-name {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  white-space: nowrap;
+  color: var(--target-color, #ff5555);
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.target-distance {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  color: #fff;
+  font-size: 10px;
+}
+
+.skeleton {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.skeleton circle,
+.skeleton line {
+  stroke: var(--target-color, #ff3333);
+  stroke-width: 2;
+  fill: none;
+}
+
+.skeleton circle {
+  fill: transparent;
+}
+
+.crosshair {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  font-size: 20px;
+  opacity: .7;
+  pointer-events: none;
+}
+
+.footer {
+  margin-top: 15px;
+  text-align: center;
+  color: #777;
+  font-size: 11px;
+}
+
+@media(max-width: 700px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .arena {
+    min-height: 420px;
+  }
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<header>
+  <h1>ROS LEGACY | ESP DEMO</h1>
+  <p class="subtitle">STANDALONE VISUAL PRACTICE SIMULATOR</p>
+</header>
+
+<div class="layout">
+
+<section class="panel">
+  <h2>ESP SETTINGS</h2>
+
+  <label class="setting">
+    ESP BOX
+    <input type="checkbox" id="boxToggle" checked>
+  </label>
+
+  <label class="setting">
+    SKELETON
+    <input type="checkbox" id="skeletonToggle" checked>
+  </label>
+
+  <label class="setting">
+    PLAYER NAME
+    <input type="checkbox" id="nameToggle" checked>
+  </label>
+
+  <label class="setting">
+    DISTANCE
+    <input type="checkbox" id="distanceToggle" checked>
+  </label>
+
+  <label class="setting">
+    CROSSHAIR
+    <input type="checkbox" id="crossToggle" checked>
+  </label>
+
+  <label class="setting">
+    ESP COLOR
+    <input type="color" id="colorPicker" value="#ff3333">
+  </label>
+
+  <button id="startBtn">START SIMULATION</button>
+  <button id="stopBtn" class="secondary">STOP SIMULATION</button>
+  <button id="resetBtn" class="secondary">RESET SETTINGS</button>
+
+  <p class="status" id="status">● SIMULATION READY</p>
+</section>
+
+<section class="panel">
+  <h2>PRACTICE ARENA</h2>
+
+  <div class="arena" id="arena">
+    <div class="arena-title">SIMULATED TARGET DISPLAY</div>
+    <div class="crosshair" id="crosshair">+</div>
+  </div>
+
+  <p class="footer">
+    DEMO ONLY — NO CONNECTION TO ROS LEGACY
+  </p>
+</section>
+
+</div>
+</div>
+
+<script>
+const arena = document.getElementById("arena");
+
+const boxToggle = document.getElementById("boxToggle");
+const skeletonToggle = document.getElementById("skeletonToggle");
+const nameToggle = document.getElementById("nameToggle");
+const distanceToggle = document.getElementById("distanceToggle");
+const crossToggle = document.getElementById("crossToggle");
+const colorPicker = document.getElementById("colorPicker");
+const crosshair = document.getElementById("crosshair");
+const status = document.getElementById("status");
+
+let targets = [];
+let running = false;
+let animationId = null;
+
+function createTarget(name, x, y, distance) {
+  const target = document.createElement("div");
+  target.className = "target";
+
+  target.style.left = x + "%";
+  target.style.top = y + "px";
+
+  target.innerHTML = `
+    <div class="target-box"></div>
+
+    <div class="target-name">${name}</div>
+
+    <div class="target-distance">${distance}m</div>
+
+    <svg class="skeleton" viewBox="0 0 95 180">
+      <circle cx="47" cy="17" r="11"></circle>
+      <line x1="47" y1="28" x2="47" y2="85"></line>
+      <line x1="47" y1="42" x2="19" y2="70"></line>
+      <line x1="19" y1="70" x2="9" y2="100"></line>
+      <line x1="47" y1="42" x2="75" y2="70"></line>
+      <line x1="75" y1="70" x2="85" y2="100"></line>
+      <line x1="47" y1="85" x2="27" y2="125"></line>
+      <line x1="27" y1="125" x2="20" y2="170"></line>
+      <line x1="47" y1="85" x2="67" y2="125"></line>
+      <line x1="67" y1="125" x2="74" y2="170"></line>
+    </svg>
+  `;
+
+  arena.appendChild(target);
+
+  const item = {
+    element: target,
+    x: x,
+    baseY: y,
+    phase: Math.random() * 6
+  };
+
+  targets.push(item);
+}
+
+function buildTargets() {
+  targets.forEach(t => t.element.remove());
+  targets = [];
+
+  createTarget("TARGET_01", 25, 130, 45);
+  createTarget("TARGET_02", 52, 90, 70);
+  createTarget("TARGET_03", 78, 160, 32);
+}
+
+function updateSettings() {
+  targets.forEach(t => {
+    const element = t.element;
+
+    element.querySelector(".target-box").style.display =
+      boxToggle.checked ? "block" : "none";
+
+    element.querySelector(".skeleton").style.display =
+      skeletonToggle.checked ? "block" : "none";
+
+    element.querySelector(".target-name").style.display =
+      nameToggle.checked ? "block" : "none";
+
+    element.querySelector(".target-distance").style.display =
+      distanceToggle.checked ? "block" : "none";
+
+    element.style.setProperty(
+      "--target-color",
+      colorPicker.value
+    );
+  });
+
+  crosshair.style.display =
+    crossToggle.checked ? "block" : "none";
+}
+
+function animate() {
+  if (!running) return;
+
+  const time = performance.now() / 1000;
+
+  targets.forEach(target => {
+    const movement = Math.sin(time * 1.5 + target.phase) * 13;
+
+    target.element.style.top =
+      (target.baseY + movement) + "px";
+  });
+
+  updateSettings();
+  animationId = requestAnimationFrame(animate);
+}
+
+document.getElementById("startBtn").onclick = () => {
+  if (running) return;
+
+  running = true;
+  status.textContent = "● SIMULATION RUNNING";
+  status.style.color = "#50df86";
+
+  animate();
+};
+
+document.getElementById("stopBtn").onclick = () => {
+  running = false;
+
+  if (animationId) {
+    cancelAnimationFrame(animationId);
+  }
+
+  status.textContent = "● SIMULATION STOPPED";
+  status.style.color = "#ff7777";
+};
+
+document.getElementById("resetBtn").onclick = () => {
+  boxToggle.checked = true;
+  skeletonToggle.checked = true;
+  nameToggle.checked = true;
+  distanceToggle.checked = true;
+  crossToggle.checked = true;
+  colorPicker.value = "#ff3333";
+
+  updateSettings();
+};
+
+[
+  boxToggle,
+  skeletonToggle,
+  nameToggle,
+  distanceToggle,
+  crossToggle,
+  colorPicker
+].forEach(input => {
+  input.addEventListener("change", updateSettings);
+});
+
+buildTargets();
+updateSettings();
+</script>
+</body>
+</html>
